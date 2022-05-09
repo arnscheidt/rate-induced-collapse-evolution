@@ -16,12 +16,13 @@ b = 2
 c = 3  
 xstar = 5
 k = 0.001
+epsilon=0.0001
 
 def model(t,X,F):
     n,x = X
 
     ndot = n*(rstar-a*(F*xstar-x)**2-b+c*n-n**2)
-    xdot = -2*np.heaviside(n,0)*k*a*(x-F*xstar)
+    xdot = -2*np.heaviside(n-epsilon,0)*k*a*(x-F*xstar)
     return [ndot,xdot]
 
 #####################################################
@@ -42,8 +43,9 @@ arrow_line_width = 1.1
 scatter_width = 70
 
 nullc_width = 3 
-n_nullc_color = (0.0,0.7,0.0)
-x_nullc_color = (0.2,0.2,0.8)
+n_nullc_color = (0.5,0.5,0.5)
+n_nullc_text_color = (0.3,0.3,0.3)
+x_nullc_color = (0.7,0.0,0.0)
 
 ax1 = plt.subplot(111)
 plt.axhline(xstar,linewidth=nullc_width,color=x_nullc_color)
@@ -60,7 +62,7 @@ plt.ylim(2.9,7.1)
 plt.xlim(-0.01,3.6)
 
 # text for nullclines
-plt.text(1.95,3.35,r'$\displaystyle \frac{dn}{dt}=0$',color=n_nullc_color)
+plt.text(1.95,3.35,r'$\displaystyle \frac{dn}{dt}=0$',color=n_nullc_text_color)
 plt.text(2.9,5.3,r'$\displaystyle \frac{dx}{dt}=0$',color=x_nullc_color)
 
 ax1.arrow(1.55,3.3,-0.5,-0,color=arrow_color,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
@@ -78,8 +80,8 @@ ax1.arrow(2.0,5,0.1,-0,color=x_nullc_color,head_width=nullc_arrow_head_width,lin
 ax1.arrow(2.15,5.9,0.01,-0.008,color=n_nullc_color,head_width=nullc_arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 ax1.arrow(2.15,4.1,0.01,0.008,color=n_nullc_color,head_width=nullc_arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 
-ax1.arrow(0.85,5.9,0.01,0.0075,color=n_nullc_color,head_width=nullc_arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
-ax1.arrow(0.85,4.1,0.01,-0.0075,color=n_nullc_color,head_width=nullc_arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
+ax1.arrow(0.85,5.9,-0.01,-0.0075,color=n_nullc_color,head_width=nullc_arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
+ax1.arrow(0.85,4.1,-0.01,0.0075,color=n_nullc_color,head_width=nullc_arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 
 #####################################################
 # FIGURE 2 - CANARD TRAJECTORIES
@@ -88,7 +90,7 @@ ax1.arrow(0.85,4.1,0.01,-0.0075,color=n_nullc_color,head_width=nullc_arrow_head_
 plt.figure()
 
 # trajectory 1 - recovery
-t = np.linspace(0,500,1000)
+t = np.linspace(0,500,10000)
 dt = t[1]-t[0]
 F = np.ones_like(t)
 r = ode(model).set_integrator("lsoda")
@@ -102,9 +104,9 @@ for i in range(1,len(t)):
     r.integrate(r.t+dt)
     f1[i] = r.y
 
-# trajectory 2 - canard
+# trajectory 2 - canard 1
 f2 = np.zeros((len(t),2))
-f2[0,:] = (2.5,3.86105875129825881764132)
+f2[0,:] = (2.5,3.861058754)
 r.set_initial_value(f2[0,:]).set_f_params(F[0])
 
 for i in range(1,len(t)):
@@ -122,15 +124,30 @@ for i in range(1,len(t)):
     r.integrate(r.t+dt)
     f3[i] = r.y
 
+# trajectory 4 - canard 2
+f4 = np.zeros((len(t),2))
+f4[0,:] = (2.5,3.86105875392)
+r.set_initial_value(f4[0,:]).set_f_params(F[0])
+
+for i in range(1,len(t)):
+    r.set_f_params(F[i])
+    r.integrate(r.t+dt)
+    f4[i] = r.y
+
+
+
 arrow_color = (0,0,0)
 arrow_overhang = 0.2
 arrow_head_width = 0.05
 arrow_width = 0.01
 arrow_line_width = 0.0001 
 traj_width=3
+can_width=3
 
 nullc_width = 7 
-n_nullc_color = (0.8,0.8,0.8)
+n_nullc_color = (0.7,0.7,0.7)
+n_nullc_text_color = (0.5,0.5,0.5)
+
 t1_col = (0,0.7,0)
 t2_col = (0.2,0.2,0.8)
 t3_col = (0,0,0)
@@ -138,15 +155,16 @@ t3_col = (0,0,0)
 ax1 = plt.subplot(111)
 plt.plot(n_nullcline_1,x_nullcline,linewidth=nullc_width,color=n_nullc_color)
 plt.plot(n_nullcline_2,x_nullcline,linewidth=nullc_width,color=n_nullc_color)
-plt.text(1.41,3.92,r'$\displaystyle \frac{dn}{dt}=0$',color=(0.7,0.7,0.7),fontsize=20)
+plt.text(1.41,3.92,r'$\displaystyle \frac{dn}{dt}=0$',color=n_nullc_text_color,fontsize=20)
 
 plt.plot(f1[:,0],f1[:,1],linewidth=traj_width,color=t1_col)
-plt.plot(f2[:,0],f2[:,1],linewidth=traj_width,color=t2_col)
+plt.plot(f2[:,0],f2[:,1],linewidth=can_width,color=t2_col)
 plt.plot(f3[:,0],f3[:,1],linewidth=traj_width,color=t3_col)
+plt.plot(f4[:,0],f4[:,1],linewidth=can_width,color=t2_col)
 
 
 plt.text(1.7,3.89,'evolutionary rescue',rotation=62,color=t1_col)
-plt.text(1.0,3.9,'canard trajectory',rotation=-70,color=t2_col)
+plt.text(1.05,3.88,'canard trajectories',rotation=-65,color=t2_col)
 plt.text(0.95,3.867,'extinction',rotation=-5,color=t3_col)
 
 plt.xlabel(r'$n$ (population)')
@@ -161,8 +179,10 @@ ax2.arrow(2,1.308,-0.01,0.001,color=t1_col,width=arrow_width,head_width=arrow_he
 ax2.arrow(2,1.130,-0.01,0.001,color=t2_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 ax2.arrow(2,0.989,-0.01,0.001,color=t3_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 ax2.arrow(1.76,1.8,0.01,0.03,color=t1_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
-ax2.arrow(1.22,1.8,-0.01,0.04,color=t2_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
+ax2.arrow(1.3,1.564,-0.015,0.04,color=t2_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 ax2.arrow(1.08,1.17,-0.01,0.002,color=t3_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
+ax2.arrow(1,2.177,-0.01,0.002,color=t2_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
+ax2.arrow(1.36,2.177,0.01,0.0015,color=t2_col,width=arrow_width,head_width=arrow_head_width,linewidth=arrow_line_width,overhang=arrow_overhang)
 
 ax2.set_ylim(0.85,2.25)
 
@@ -243,7 +263,6 @@ tw = 3
 ax = f3d.add_subplot(111, projection='3d') 
 ax.plot(f1[:,0],F_rescue*xstar,f1[:,1],linewidth=tw,color=t1_col,zorder=10,label='evolutionary rescue')
 ax.plot(f2[:,0],F_extinct*xstar,f2[:,1],linewidth=tw,color=t2_col,zorder=10,label='rate-induced extinction')
-ax.plot(np.ones_like(F_extinct)*2.618,F_extinct*xstar,F_extinct*xstar,linewidth=tw,color=(0,0,0),zorder=10,label='stable fixed point')
 
 def nullc(n,xstar):
     # returns x as a function of n and xstar
@@ -255,7 +274,15 @@ Xstar = np.linspace(4.8,8,501)
 N2,Xstar2 = np.meshgrid(N,Xstar,indexing='xy')
 X2 = nullc(N2,Xstar2)
 
-ax.plot_wireframe(N2,Xstar2,X2,color=(0.8,0.8,0.8),zorder=-10) 
+# get fold location 
+xpoints = [np.amin(X2[0,:]),np.amin(X2[-1,:])]
+
+ax.plot_wireframe(N2,Xstar2,X2,color=(0.8,0.8,0.8),zorder=-10)
+
+ax.plot([1.5,1.5],[4.8,8],[xpoints[0],xpoints[1]],linewidth=2,linestyle=':',color=(0,0,0),zorder=5)
+
+ax.plot([2.618,2.618],[4.8,8],[4.8,8],linewidth=tw,color=(0,0,0),zorder=10,label='stable fixed point')
+
 ax.set_zlim(8.1,3.9) 
  
 ax.set_zlabel(r'$x$ (trait)') 
@@ -270,6 +297,8 @@ for axis in ax.w_xaxis, ax.w_yaxis, ax.w_zaxis:
   axis.pane.set_visible(False)
 
 f3d.text(0.22,0.75,r'\textbf{C}',fontsize=20)
+
+
 
 #####################################################
 # FIGURE 4 - CRITICAL RATE FOR EXTINCTION

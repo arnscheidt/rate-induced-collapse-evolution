@@ -22,7 +22,7 @@
 # evolution -> Boolean variable defining whether evolution is occurring or not
 # T -> total number of timesteps
 # Tsave -> the interval at which we want data saved to "saved_types" and "saved_n"
-# params_start and params_end are lists of parameter values in the format [b,c,d,θ,h,w,a]
+# params_start and params_end are lists of parameter values in the format [β,γ,κ,θ,h,w,a]
 # If they are different, there will be linear ramping between the two.
 #
 # To summarize, an example run looks like
@@ -115,8 +115,8 @@ end
 # this doesn't matter though, p<0 will become p=0,
 # and p>1 will become p=1
 
-function pdeath(x::Float64,N::Int64,b::Float64,c::Float64)
-	p = b*x*(x+1) + c*N
+function pdeath(x::Float64,N::Int64,β::Float64,γ::Float64)
+	p = β*x*(x+1) + γ*N
 	if p<0
 		p = 0
 	elseif p>1
@@ -125,14 +125,14 @@ function pdeath(x::Float64,N::Int64,b::Float64,c::Float64)
 	return p
 end
 
-function pbirth(agents::Dict{Float64,Int64},x_i::Float64,sum::Float64,d::Float64,θ::Float64,h::Float64,w::Float64,a::Float64)
+function pbirth(agents::Dict{Float64,Int64},x_i::Float64,sum::Float64,κ::Float64,θ::Float64,h::Float64,w::Float64,a::Float64)
 	# calculate sum of alpha
 	types = collect(agents)
 	α_running_sum = 0
 	for i in 1:length(types)
 		α_running_sum+=α(x_i-types[i][1],h,w,a)*types[i][2]
 	end
-	p = d*sum/(1+α_running_sum+θ*sum)
+	p = κ*sum/(1+α_running_sum+θ*sum)
 	if p<0
 		p = 0
 	elseif p>1
@@ -152,7 +152,7 @@ function iterate!(agents::Dict{Float64,Int64},births::Dict{Float64,Int64},evolut
 	
 	N,sum_term = sum(agents)
 
-	b,c,d,θ,h,w,a = params
+	β,γ,κ,θ,h,w,a = params
 
 	# BIRTHS
 
@@ -162,7 +162,7 @@ function iterate!(agents::Dict{Float64,Int64},births::Dict{Float64,Int64},evolut
 	for itype in 1:length(types)
 		n_temp = types[itype][2]
 
-		p = pbirth(agents,types[itype][1],sum_term,d,θ,h,w,a)
+		p = pbirth(agents,types[itype][1],sum_term,κ,θ,h,w,a)
 
 		# the number of births is distributed Bin(n_temp,p)
 		n_births = rand(Binomial(n_temp,p))
@@ -190,7 +190,7 @@ function iterate!(agents::Dict{Float64,Int64},births::Dict{Float64,Int64},evolut
 	for itype in 1:length(types)
 		n_temp = types[itype][2]
 
-		p = pdeath(types[itype][1],N,b,c)
+		p = pdeath(types[itype][1],N,β,γ)
 
 		# the number of deaths per type is distributed Bin(n_temp,p)
 		n_deaths = rand(Binomial(n_temp,p))
